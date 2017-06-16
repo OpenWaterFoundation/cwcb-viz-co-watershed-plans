@@ -18,6 +18,9 @@
   <script src="javascript/L.Control.MousePosition.js"></script>
   <script src="javascript/bootstrap.min.js"></script>
   <script src="javascript/papaparse.js"></script>
+
+  <!-- FAVICON -->
+  <link rel="shortcut icon" type="image/x-icon" href="images/snodas-tools-favicon.ico"/>
 </head>
 
 <body>
@@ -51,9 +54,8 @@
                 plans. Select a basin by clicking on the basin or selecting from
                 the list.</li>
               <br>
-              <li class="information">Information about the plan will be
-                shown in a popup. Click on the link to the the watershed plan to
-                view the plan document.</li>
+              <li class="information">Information about the basin will be shown in a popup and a list of available plans will be shown on the right.
+              Click on the link to a watershed plan to view the plan document in a new tab.</li>
               <br>
               <li class="information">This visualization was created by
                 the Open Water Foundation for the Colorado Water Conservation
@@ -62,25 +64,33 @@
           </div>
           <div id="data" style="display: none;">
             <ul>
+              <li class="information">Data for the visualization include the HUC8 basin boundaries and a comma-separated-value (CSV) file with the plan data. Each HUC8 basin can have zero or more plans. 
+              The original basin file as a GeoJSON file was 24 MB and was pruned by removing points. The Watershed_Plans.csv file "SubBasin" field contains the HUC8 identifier, which matches the Watershed_Plans_Pruned.geojson 
+              "HUC8" property. Properties shown in the visualization are taken from both files.</li>
+              <br>
               <li class="information"><a href="data-files/Watershed_Plans.csv">Watershed_Plans.csv</a></li>
               <li class="information"><a href="data-files/Watershed_Plans.geojson">Watershed_Plans.geojson</a></li>
-              <li class="information"><a href="data-files/Watershed_Plans.tsv">Watershed_Plans.tsv</a></li>
+              <li class="information"><a href="data-files/Watershed_Plans_Pruned.geojson">Watershed_Plans_Pruned.geojson</a></li>
             </ul>
           </div>
           <div id="sources" style="display: none;">
             <ul>
               <li class="information">The data for this visualization was
                 provided by <a
-                href="http://cwcb.state.co.us/Pages/CWCBHome.aspx">the
+                href="http://cwcb.state.co.us/Pages/CWCBHome.aspx" target="_blank">the
                   Colorado Water Conservation Board</a> on May 15, 2017. The data may
                 be updated in the future.
               </li>
+              <li class="information">The source files for this web page are available on GitHub as <a href="https://github.com/OpenWaterFoundation/cwcb-viz-co-watershed-plans" target="_blank">OpenWaterFoundation/cwcb-viz-co-watershed-plans.</a></li>
             </ul>
           </div>
         </div>
+        <div class="well">
+          <p>Website version 1.0.0 (2017-06-16)</p>
+        </div>
       </div>
-      <div class="col-sm-8 text-left" id="mapid">
-        <div id="mapid" style="width: 100px; height: 800px;">
+      <div class="col-sm-8 text-lefto" id="mapid">
+        <div id="mapid" style="widtho: 100px; height: 800px;">
           <script>
              $.ajaxSetup({
               async: false
@@ -225,29 +235,30 @@
                   /* This function is used to imitate the fire event 'mouseover'.
                   It is called when a user selects a basin from the 'Select Basin' button.
                   Once a basin is selected this function will imitate a user moving the 
-                  cursor over a basin. This function takes in a LOCAL_ID and will highlight
+                  cursor over a basin. This function takes in a HUC8 and will highlight
                   the currently selected basin. */
                   var basin_selected = false;     /* basin_selected is a boolean value. This is set true when the ClickOnMapItem function is called.
                                                      This boolean value is used to highlight basins and will prevent the highlight to be removed when the
                                                      user "mouseouts" of the basin.*/
                   var old_basin;
-                  function clickOnMapItem(Local_ID) {
+                  function clickOnMapItem(HUC8) {
                       if(basin_selected)
                       {
                           var old_layer = geojson.getLayer(old_basin);
                           old_layer.feature.properties.hasBeenSelected = false;
                           old_layer.fireEvent('mouseout');
                       }
-                      var id = Local_ID;
-                      old_basin = Local_ID;
+                      var id = HUC8;
+                      old_basin = HUC8;
                       //get target layer by it's id
                       var layer = geojson.getLayer(id);
                       //fire event 'click' on target layer 
                       layer.fireEvent('mouseover');
                       layer.feature.properties.hasBeenSelected = true;
+                      console.log(layer);
                       // select_basin_call = true;
                       basin_selected = true;
-                      getWaterPlans(Local_ID);
+                      getWaterPlans(HUC8, layer.feature.properties.NAME, getWaterPlanNumber(HUC8));
                   }
 
             /* The below code is used to create the informational legend on the map. 
@@ -260,7 +271,23 @@
                 return this._div;
             };
 
-            function getWaterPlans(HUC8)
+            function sortYear(a,b)
+            {
+              if(a[0] < b[0])
+              {
+                return -1;
+              }
+              else if(a[0] > b[0])
+              {
+                return 1;
+              }
+              else
+              {
+                return 0;
+              }
+            }
+
+            function getWaterPlans(HUC8, Name, Plans)
             {
               var watershed_plans = "";
               $.get("data-files/Watershed_Plans.csv",function(data){
@@ -281,22 +308,32 @@
                       {
                         year = "N/A";
                       }
-                      watershed_plans = "<b>Year:</b> " + year + "<br><b>Plan Title:</b> " + Title + "<br><b>Basin:</b> " + Basin + "<br><b>River/Stream(s):</b> " + RiversStreams + "<br><b>Organization:</b> " + Organization + '<br><b>Link:</b> <a href="' + Link + '">' + Link + "</a><br><br>";
+                      watershed_plans = "<b>Year:</b> " + year + "<br><b>Plan Title:</b> " + Title + "<br><b>Basin:</b> " + Basin + "<br><b>River/Stream(s):</b> " + RiversStreams + "<br><b>Organization:</b> " + Organization
+                       + '<br><b>Link:</b> <a href="' + Link + '"' + 'target="_blank">' + Link + "</a><br><br>";
                       year_array.push([year,watershed_plans]);
                     }
                   }
+                  year_array.sort(sortYear);
                   year_array.reverse();
                   watershed_plans = "";
+                  var temp = "";
                   for(var index = 0; index < year_array.length; index++)
                   {
-                    if(index != 0)
+                    if(year_array[index][0] == "N/A")
+                    {
+                      temp += year_array[index][1];
+                    }
+                    else
                     {
                       watershed_plans +=  year_array[index][1];
                     }
                   }
-                  watershed_plans += year_array[0][1];
+                  watershed_plans += temp;
               });
-              var basinInfo = document.getElementById('basin_information').innerHTML = watershed_plans;
+
+              var basinInfo = document.getElementById('basin_information');
+              basinInfo.innerHTML = "<b>Basin HUC8 ID: </b>" + HUC8 + "<br><b>Basin HUC8 Name: </b>" + Name + "<br><b>Plans: </b>" + Plans + "<br><br>";
+              basinInfo.innerHTML += watershed_plans;
             }
 
             function getWaterPlanNumber(HUC8)
@@ -313,9 +350,9 @@
             /* The code below is what shows up in the Daily Basin Statistics informational
             legend in the bottom left corner of the map. */
             info.update = function(props) {
-                this._div.innerHTML = '<h4> Basin Infromation </h4>' + 
+                this._div.innerHTML = '<h4> Basin Information </h4>' + 
                 (props ? "<br><b>Basin HUC8 ID: </b>" + props.HUC8 + 
-                "<br><b>Basin Name: </b>" + props.NAME + 
+                "<br><b>Basin HUC8 Name: </b>" + props.NAME + 
                 "<br><b>Watershed Plans: </b>" + getWaterPlanNumber(props.HUC8): 'Hover over a basin');
             };
 
@@ -335,12 +372,22 @@
                     labels = ['<strong>Number of Plans</strong>'],
                     from, to;
 
-                    for (var i = 0; i < grades.length; i++) {
-                        from = grades[i];
-                        labels.push('<i style="background:' + getColor(from) + '"></i>&nbsp; ' + from);                  }
-
-                    div.innerHTML = labels.join('<br>');
-                    return div;
+                    for (var i = 0; i < grades.length; i++) 
+                    {
+                      from = grades[i];
+                      if(i == 5)
+                      {
+                        labels.push('<i style="background:' + getColor(from) + '"></i>&nbsp; ' + from + '<i style="border-style: hidden; float: right;" class="fa fa-question-circle" aria-hidden="true"><span class="tooltiptext">The legend value of 5 means >= 5 and < 10.</span></i>');
+                      }
+                      else
+                      {
+                        labels.push('<i style="background:' + getColor(from) + '"></i>&nbsp; ' + from);                  
+                      }
+                    }
+                      div.innerHTML = labels.join('<br>');
+                    console.log(labels);
+                      // div.innerHTML += '<br><i style="border-style: hidden;" class="fa fa-question-circle" aria-hidden="true"><span class="tooltiptext">The legend value of 5 means >= 5 and < 10.</span></i>';
+                      return div;
                 };
                 legend.addTo(map);
 
@@ -450,9 +497,9 @@
 
   <footer class="container-fluid text-center">
     <h5>
-      Created by <a href="http://openwaterfoundation.org/">the Open
+      Created by <a href="http://openwaterfoundation.org/" target="_blank">the Open
         Water Foundation</a> for <a
-        href="http://cwcb.state.co.us/Pages/CWCBHome.aspx">the Colorado
+        href="http://cwcb.state.co.us/Pages/CWCBHome.aspx" target="_blank">the Colorado
         Water Conservation Board</a>
     </h5>
   </footer>

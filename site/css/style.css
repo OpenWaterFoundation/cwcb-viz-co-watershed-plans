@@ -25,6 +25,10 @@
   }
   .row.content {
     height: auto !important;
+  }
+  #mapid {
+    width: 380px;
+    height: 350px;
   } 
 }
 
@@ -60,7 +64,6 @@ footer h5 a:hover {
 /* INFORMATION STYLING */
 .information {
   text-align: left !important;
-  overflow: auto !important;
 }
 
 /* DROPDOWN BUTTON */
@@ -84,3 +87,38 @@ footer h5 a:hover {
   overflow: auto !important;
 }
 
+/* HELPFUL INFORMATION ? */
+.fa {
+    position: relative;
+    display: inline-block;
+    border-bottom: 1px dotted black;
+}
+.fa .tooltiptext {
+    visibility: hidden;
+    width: 128px;
+    background: white;
+    background: rgba(255,255,255,0.8);
+    box-shadow: 0 0 15px rgba(0,0,0,0.2);
+    color: #fff;
+    text-align: center;
+    border-radius: 6px;
+    padding: 5px 0;
+
+    /* Position the tooltip */
+    position: absolute;
+    left: -102px;
+    top: 50px;
+    z-index: 999999;
+}
+
+.fa .tooltiptext ul li {
+    list-style-type: none;
+    text-align: left;
+}
+
+.fa:hover .tooltiptext {
+    visibility: visible;
+    font-family: Trebuchet,Helvetica,sans-serif!important;
+    color: black;
+    font-weight: bold;
+}
