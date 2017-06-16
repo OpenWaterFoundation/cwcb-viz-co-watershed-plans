@@ -255,7 +255,6 @@
                       //fire event 'click' on target layer 
                       layer.fireEvent('mouseover');
                       layer.feature.properties.hasBeenSelected = true;
-                      console.log(layer);
                       // select_basin_call = true;
                       basin_selected = true;
                       getWaterPlans(HUC8, layer.feature.properties.NAME, getWaterPlanNumber(HUC8));
@@ -385,8 +384,6 @@
                       }
                     }
                       div.innerHTML = labels.join('<br>');
-                    console.log(labels);
-                      // div.innerHTML += '<br><i style="border-style: hidden;" class="fa fa-question-circle" aria-hidden="true"><span class="tooltiptext">The legend value of 5 means >= 5 and < 10.</span></i>';
                       return div;
                 };
                 legend.addTo(map);
