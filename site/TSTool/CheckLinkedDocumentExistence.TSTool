@@ -1,0 +1,45 @@
+StartLog(LogFile="CheckLinkedDocumentExistence.TSTool.log")
+# This command file reads all the watershed plans using the specified URL.
+# This is a check to verify which documents are missing.
+# - The files are not actually saved locally.
+# - Errors will result if the files are null or do not exist.
+# - Also compute the download time so that context is available for what data users will experience.
+# - Add a Row column with row count to compare with the original table in the GeoDatabase
+ReadTableFromDelimitedFile(TableID="Watershed_Plans",InputFile="Watershed_Plans.csv",HeaderLines="1",RowCountProperty="Watershed_Plans_RowCount")
+InsertTableColumn(TableID="Watershed_Plans",InsertColumn="Row",InsertBeforeColumn="Plan_Title",ColumnType=Integer)
+# Add columns to the table for download time
+InsertTableColumn(TableID="Watershed_Plans",InsertColumn="DownloadStartSec",ColumnType=Integer)
+InsertTableColumn(TableID="Watershed_Plans",InsertColumn="DownloadEndSec",ColumnType=Integer)
+# Loop through the table and try to download each document using the URL in the Link column.
+# - only attempt download if the Link value in the table is not null
+# - otherwise errors are generated that don't really help
+SetProperty(PropertyName="TableRow",PropertyType=Integer,PropertyValue="0")
+For(Name="waterPlans",IteratorProperty="url",TableID="Watershed_Plans",TableColumn="Link",TablePropertyMap="SubBasin:SubBasin,Plan_Title:Plan_Title")
+SetProperty(PropertyName="TableRow",PropertyType=Integer,PropertyValue="${TableRow}",Add="1")
+If(Name="urlNotDefined",PropertyIsNotDefinedOrIsEmpty="url")
+Message(Message="Link column is null or blank.")
+EndIf(Name="urlNotDefined")
+If(Name="urlDefined",PropertyIsDefined="url")
+Message(Message="Retrieving document from ${url}.")
+SetTableValues(TableID="Watershed_Plans",ColumnFilters="SubBasin:${SubBasin},Plan_Title:${Plan_Title}",ColumnValues="Row:${TableRow}")
+SetProperty(PropertyName="DownloadStart",PropertyType=DateTime,PropertyValue="CurrentToSecond")
+FormatStringProperty(InputProperties="url",Format="%3.3s",OutputProperty="url3",PropertyType=String)
+If(Name="ifHttp",Condition="${url3}==htt")
+Message(Message="Link is an http address.")
+WebGet(URI="${url}")
+EndIf(Name="ifHttp")
+If(Name="ifFtp",Condition="${url3}==ftp")
+Message(Message="Link is an ftp address.")
+FTPGet(RemoteSite="${url}",DestinationFolder=".")
+EndIf(Name="ifFtp")
+SetProperty(PropertyName="DownloadEnd",PropertyType=DateTime,PropertyValue="CurrentToSecond")
+FormatDateTimeProperty(PropertyName="DownloadStartSec",DateTimePropertyName="DownloadStart",Format="%s",PropertyType=Integer)
+FormatDateTimeProperty(PropertyName="DownloadEndSec",DateTimePropertyName="DownloadEnd",Format="%s",PropertyType=Integer)
+SetTableValues(TableID="Watershed_Plans",ColumnFilters="SubBasin:${SubBasin},Plan_Title:${Plan_Title}",ColumnValues="DownloadStartSec:${DownloadStartSec},DownloadEndSec:${DownloadEndSec}")
+EndIf(Name="urlDefined")
+EndFor(Name="waterPlans")
+# Calculate the download time from download start and download end
+TableMath(TableID="Watershed_Plans",Input1="DownloadEndSec",Operator="-",Input2="DownloadStartSec",Output="DownloadTimeSec")
+# Save results to Excel file so download results can be checked
+NewExcelWorkbook(OutputFile="Watershed_Plans_Check.xlsx",Worksheets="Watershed_Plans",KeepOpen=True)
+WriteTableToExcel(TableID="Watershed_Plans",OutputFile="Watershed_Plans_Check.xlsx",Worksheet="Watershed_Plans",ExcelAddress="A1",ExcelColumnNames=FirstRowInRange)
