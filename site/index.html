@@ -18,6 +18,7 @@
   <script src="javascript/L.Control.MousePosition.js"></script>
   <script src="javascript/bootstrap.min.js"></script>
   <script src="javascript/papaparse.js"></script>
+  <script src="javascript/methods.js"></script>
 
   <!-- FAVICON -->
   <link rel="shortcut icon" type="image/x-icon" href="images/snodas-tools-favicon.ico"/>
@@ -90,175 +91,48 @@
         </div>
       </div>
       <div class="col-sm-8 text-lefto" id="mapid">
-        <div id="mapid" style="widtho: 100px; height: 800px;">
+        <div id="mapid" style="width: 100px; height: 800px;">
           <script>
-             $.ajaxSetup({
+            $.ajaxSetup({
               async: false
             });
-        /* Create Leaflet Map */
-        var map = L.map('mapid', {zoomControl: false}).setView([38.99, -105.54], 7);
+            /* Create Leaflet Map */
+            var map = L.map('mapid', {zoomControl: false}).setView([38.99, -105.54], 7);
                   
-        L.tileLayer('https://api.mapbox.com/styles/v1/mapbox/outdoors-v10/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1Ijoia29yeXNhbSIsImEiOiJjaXd4dDRxbTQwMXRkMm9tZzd5b3BqdTBwIn0.A2EGyNrWG2Lbbd5c-I-94w', {
-            attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery &copy;<a href="http://mapbox.com">Mapbox</a>',
-            maxZoom: 18     
-        }).addTo(map);
+            L.tileLayer('https://api.mapbox.com/styles/v1/mapbox/outdoors-v10/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1Ijoia29yeXNhbSIsImEiOiJjaXd4dDRxbTQwMXRkMm9tZzd5b3BqdTBwIn0.A2EGyNrWG2Lbbd5c-I-94w', {
+                attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery &copy;<a href="http://mapbox.com">Mapbox</a>',
+                maxZoom: 18     
+            }).addTo(map);
 
-        /* Top Left Corner of Map. Allows for a home button to reset
-        to the default zoom. */
-        var zoomHome = L.Control.zoomHome();
-        zoomHome.addTo(map);
+            /* Top Left Corner of Map. Allows for a home button to reset
+            to the default zoom. */
+            var zoomHome = L.Control.zoomHome();
+            zoomHome.addTo(map);
 
-        /* Bottom Right corner. This shows the current lat and long 
-        of the mouse cursor. 
+            /* Bottom Right corner. This shows the current lat and long 
+            of the mouse cursor. 
 
-        'º' used for the degree character when the latitude and longitude of the 
-        cursor is dispalyed. */
-        L.control.mousePosition({position: 'bottomright',lngFormatter: function(num) {
-          var direction = (num < 0) ? 'W' : 'E';
-          var formatted = Math.abs(L.Util.formatNum(num, 3)) + 'º ' + direction;
-          return formatted; 
-        },
-        latFormatter: function(num) {
-          var direction = (num < 0) ? 'S' : 'N';
-          var formatted = Math.abs(L.Util.formatNum(num, 3)) + 'º ' + direction;
-          return formatted;
-        }}).addTo(map);
+            'º' used for the degree character when the latitude and longitude of the 
+            cursor is dispalyed. */
+            L.control.mousePosition({position: 'bottomright',lngFormatter: function(num) {
+              var direction = (num < 0) ? 'W' : 'E';
+              var formatted = Math.abs(L.Util.formatNum(num, 3)) + 'º ' + direction;
+              return formatted; 
+            },
+            latFormatter: function(num) {
+              var direction = (num < 0) ? 'S' : 'N';
+              var formatted = Math.abs(L.Util.formatNum(num, 3)) + 'º ' + direction;
+              return formatted;
+            }}).addTo(map);
 
-        /* Bottom Right corner. This shows the scale in km and miles of
-        the map. */
-        L.control.scale({position: 'bottomright',imperial: true}).addTo(map);
+            /* Bottom Right corner. This shows the scale in km and miles of
+            the map. */
+            L.control.scale({position: 'bottomright',imperial: true}).addTo(map);
 
-        /* getColor is called by the onEachFeature function. This is what controls `
-        the color of each basin depending on the  Mean SME data value. 
-        This also controls the colors that are shown in the legend. */
-                  function getColor(d) {
-                      if(d == undefined || d == 0)
-                      {
-                          return '#fafafa';
-                      }
-                      return d < 2 ? '#CCCCCC':
-                        d < 3 ? '#8c8c8c':
-                        d < 4 ? '#A6BDDB':
-                        d < 5 ? '#74A9CF':
-                        d < 10 ? '#2B8CBE':
-                      '#045A8D';
-                  }
+
             /* A GeoJSON layer used to add GeoJSON objects to the leaflet map.
             The geojson variable layer code is as follows L.geoJSON(geojsonFeature).addTo(map); */
             var geojson;
-
-            /* The function below is called when adding the geojson data from the SNODAS files.
-            Style controls the fill color of each basin, the weight of the lines surrounding the 
-            basin, the color of the lines outlining each basin, and the opacity. */                 
-            function setSWELayerStyle(feature){
-                return {
-                    fillColor: getColor(feature.properties.plans),
-                    weight: 1, 
-                    color: 'black',
-                    fillOpacity: 0.40
-                };
-            }
-
-            /* This function is used for the CO_boundary style. It sets the weight of the line used
-            to border Colorado, the color of that line, and sets the fill opacity to 0. */
-            function setStateBoundaryStyle(feature){
-                return {
-                // fillColor: getColor(feature.properties.Mean_inches),
-                weight: 5, 
-                color: 'black',
-                fillOpacity: 0,
-            };
-            }
-
-
-             /* This feature is called by the onEachFeature function. It is what allows users to 
-                  highlight over basins and will pop up a gray line outlining the basin. */   
-                  var select_basin_call = false;  /* select_basin_call is a boolean value. This is set true when the ClickOnMapItem function is called.
-                                                     This boolean value is used to highlight basins and will prevent the highlight to be removed when the
-                                                     user "mouseouts" of the basin.*/
-                  function highlightFeature(e) {
-                      select_basin_call = false;
-                      var layer = e.target;
-                      layer.setStyle({
-                          weight: 6,
-                          color: '#666',
-                          dashArray: '',
-                          
-                      });
-
-                      if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
-                          layer.bringToFront();
-                      }
-                      
-                      info.update(layer.feature.properties);
-                  }
-                  
-                  /* This function is also called by the onEachFeature function. It is used
-                  once a basin has been highlighted over, then the user moves the mouse it will
-                  reset the layer back to the original state. */
-                  function resetHighlight(e) {
-                      if(!e.target.feature.properties.hasBeenSelected)
-                      {
-                          geojson.resetStyle(e.target);
-                          info.update();
-                          if(select_basin_call)
-                          {
-                              var layer = geojson.getLayer(e.target.feature.properties.HUC8);
-                              layer.fireEvent('mouseover');
-                              select_basin_call = false;
-                          }
-                      }
-                  }
-                  
-                  /* This function is called by the onEachFeature function. It is used
-                  if a user clicks on a basin. Once a basin is selected, the proper SWE graphs
-                  will be accessible to view. */
-                  function selectBasin(e) {
-                      // map.fitBounds(e.target.getBounds());
-                      clickOnMapItem(e.target.feature.properties.HUC8);
-                  }
-
-                  /* This function is used when adding the SNODAS data from a csv file to the map. It makes every object
-                  in the data have these certain "properties". So each object will have a mouseover,
-                  mouseout, and click property. All of these properties allow users to highlight over
-                  basins, and click on basins to zoom in on  them */
-                  function onEachFeature(feature, layer) {
-                      layer.on({
-                          mouseover: highlightFeature,
-                          mouseout: resetHighlight,
-                          click: selectBasin
-                      });
-                      layer._leaflet_id = feature.properties.HUC8;
-
-                  }
-
-                  /* This function is used to imitate the fire event 'mouseover'.
-                  It is called when a user selects a basin from the 'Select Basin' button.
-                  Once a basin is selected this function will imitate a user moving the 
-                  cursor over a basin. This function takes in a HUC8 and will highlight
-                  the currently selected basin. */
-                  var basin_selected = false;     /* basin_selected is a boolean value. This is set true when the ClickOnMapItem function is called.
-                                                     This boolean value is used to highlight basins and will prevent the highlight to be removed when the
-                                                     user "mouseouts" of the basin.*/
-                  var old_basin;
-                  function clickOnMapItem(HUC8) {
-                      if(basin_selected)
-                      {
-                          var old_layer = geojson.getLayer(old_basin);
-                          old_layer.feature.properties.hasBeenSelected = false;
-                          old_layer.fireEvent('mouseout');
-                      }
-                      var id = HUC8;
-                      old_basin = HUC8;
-                      //get target layer by it's id
-                      var layer = geojson.getLayer(id);
-                      //fire event 'click' on target layer 
-                      layer.fireEvent('mouseover');
-                      layer.feature.properties.hasBeenSelected = true;
-                      // select_basin_call = true;
-                      basin_selected = true;
-                      getWaterPlans(HUC8, layer.feature.properties.NAME, getWaterPlanNumber(HUC8));
-                  }
 
             /* The below code is used to create the informational legend on the map. 
             info.update is used to call the statistics for each basin. */
@@ -269,22 +143,6 @@
                 this.update();
                 return this._div;
             };
-
-            function sortYear(a,b)
-            {
-              if(a[0] < b[0])
-              {
-                return -1;
-              }
-              else if(a[0] > b[0])
-              {
-                return 1;
-              }
-              else
-              {
-                return 0;
-              }
-            }
 
             function getWaterPlans(HUC8, Name, Plans)
             {
@@ -335,17 +193,7 @@
               basinInfo.innerHTML += watershed_plans;
             }
 
-            function getWaterPlanNumber(HUC8)
-            {
-              if(counts[HUC8] != undefined)
-              {
-                return counts[HUC8];
-              }
-              else
-              {
-                return 0;
-              }
-            }
+
             /* The code below is what shows up in the Daily Basin Statistics informational
             legend in the bottom left corner of the map. */
             info.update = function(props) {
@@ -363,84 +211,69 @@
             legend and will create the html code required to do so */
             var legend = L.control({position: 'topright'});
 
-            legend.onAdd = function (map) {
+            legend.onAdd = function (map) 
+            {
+              var div = L.DomUtil.create('div', 'info legend'),
 
-                var div = L.DomUtil.create('div', 'info legend'),
+              grades = [0,1,2,3,4,5,10],
+              labels = ['<strong>Number of Plans</strong>'],
+              from, to;
 
-                grades = [0,1,2,3,4,5,10],
-                    labels = ['<strong>Number of Plans</strong>'],
-                    from, to;
+              for (var i = 0; i < grades.length; i++) 
+              {
+                from = grades[i];
+                if(i == 5)
+                {
+                  labels.push('<i style="background:' + getColor(from) + '"></i>&nbsp; ' + from + '<i style="border-style: hidden; float: right;" class="fa fa-question-circle" aria-hidden="true"><span class="tooltiptext">The legend value of 5 means >= 5 and < 10.</span></i>');
+                }
+                else
+                {
+                  labels.push('<i style="background:' + getColor(from) + '"></i>&nbsp; ' + from);                  
+                }
+              }
+              div.innerHTML = labels.join('<br>');
+              return div;
+            };
+            legend.addTo(map);
 
-                    for (var i = 0; i < grades.length; i++) 
-                    {
-                      from = grades[i];
-                      if(i == 5)
-                      {
-                        labels.push('<i style="background:' + getColor(from) + '"></i>&nbsp; ' + from + '<i style="border-style: hidden; float: right;" class="fa fa-question-circle" aria-hidden="true"><span class="tooltiptext">The legend value of 5 means >= 5 and < 10.</span></i>');
-                      }
-                      else
-                      {
-                        labels.push('<i style="background:' + getColor(from) + '"></i>&nbsp; ' + from);                  
-                      }
-                    }
-                      div.innerHTML = labels.join('<br>');
-                      return div;
-                };
-                legend.addTo(map);
+            /* Grabs the data from CO_boundary.geojson and adds it as a
+            layer to the map. This is what creates the big black border around
+            Colorado */
+            $.getJSON("json/CO_boundary.geojson",function(data){
+                L.geoJSON(data, {style: setStateBoundaryStyle}).addTo(map);
+            });
+            
+            var array = new Array();
+            function MergeData(GeoJSON, SubBasin)
+            {
+              for(var index = 0; index < GeoJSON.features.length; index++)
+              {
+                array.push([GeoJSON.features[index].properties.NAME,GeoJSON.features[index].properties.HUC8]);
+                if(SubBasin[GeoJSON.features[index].properties.HUC8]!= undefined)
+                {
+                  GeoJSON.features[index].properties.plans = SubBasin[GeoJSON.features[index].properties.HUC8];
+                }
+                GeoJSON.features[index]["properties"]["hasBeenSelected"] = false;
+              }
+              return GeoJSON;
+            }
+            
+            var counts = {};
+            $.get("data-files/Watershed_Plans.csv",function(csvdata)
+            {
+              var watershed_csv = Papa.parse(csvdata, {header: true, skipEmptyLines: true, dynamicTyping: true});
+              watershed_csv.data.sort(compare);
+              for(var index = 0; index < watershed_csv.data.length; index++)
+              {
+                var subbasin = watershed_csv.data[index].SubBasin;
+                counts[subbasin] = counts[subbasin] ? counts[subbasin] + 1 : 1;
+              }
+            });
 
-                  /* Grabs the data from CO_boundary.geojson and adds it as a
-                  layer to the map. This is what creates the big black border around
-                  Colorado */
-                  $.getJSON("json/CO_boundary.geojson",function(data){
-                      L.geoJSON(data, {style: setStateBoundaryStyle}).addTo(map);
-                  });
-
-                  function compare(a,b)
-                  {
-                    if(a.SubBasin < b.SubBasin)
-                    {
-                      return -1;
-                    }
-                    else if(a.SubBasin > b.SubBasin)
-                    {
-                      return 1;
-                    }
-                    else
-                    {
-                      return 0;
-                    }
-                  }
-
-                  var array = new Array();
-                  function MergeData(GeoJSON, SubBasin)
-                  {
-                    for(var index = 0; index < GeoJSON.features.length; index++)
-                    {
-                      array.push([GeoJSON.features[index].properties.NAME,GeoJSON.features[index].properties.HUC8]);
-                      if(SubBasin[GeoJSON.features[index].properties.HUC8]!= undefined)
-                      {
-                        GeoJSON.features[index].properties.plans = SubBasin[GeoJSON.features[index].properties.HUC8];
-                      }
-                      GeoJSON.features[index]["properties"]["hasBeenSelected"] = false;
-                    }
-                    return GeoJSON;
-                  }
-                  var counts = {};
-                $.get("data-files/Watershed_Plans.csv",function(csvdata){
-                  var watershed_csv = Papa.parse(csvdata, {header: true, skipEmptyLines: true, dynamicTyping: true});
-                  watershed_csv.data.sort(compare);
-                  for(var index = 0; index < watershed_csv.data.length; index++)
-                  {
-                    var subbasin = watershed_csv.data[index].SubBasin;
-                    counts[subbasin] = counts[subbasin] ? counts[subbasin] + 1 : 1;
-                  }
-                  });
-                  
-
-                $.getJSON("json/Watershed_Plans_Pruned.geojson",function(data){
-                    geojson = L.geoJSON(MergeData(data,counts), {style: setSWELayerStyle, onEachFeature: onEachFeature}).addTo(map);
-                  });
-            </script>
+            $.getJSON("json/Watershed_Plans_Pruned.geojson",function(data){
+              geojson = L.geoJSON(MergeData(data,counts), {style: setSWELayerStyle, onEachFeature: onEachFeature}).addTo(map);
+            });
+          </script>
         </div>
       </div>
       <div class="col-sm-2 sidenav">
@@ -452,33 +285,8 @@
             </button>
             <ul class="dropdown-menu" id="basinlist">
               <script>
-                function sortArray(a,b)
-                {
-                  if(a[0] < b[0])
-                  {
-                    return -1;
-                  }
-                  else if(a[0] > b[0])
-                  {
-                    return 1;
-                  }
-                  else
-                  {
-                    return 0;
-                  }
-                }
-                array.sort(sortArray);
-                for(HUC8 in array)
-                {
-                  var list = document.createElement('li');
-                  var a = document.createElement('a');
-                  a.setAttribute("href","#");
-                  a.setAttribute("onclick",'clickOnMapItem(' + '"' + array[HUC8][1] + '");');
-                  var basin = document.createTextNode(array[HUC8][0] + " " + array[HUC8][1]);
-                  a.appendChild(basin);
-                  list.appendChild(a);
-                  document.getElementById('basinlist').appendChild(list);
-                }
+                array.sort(sortBasins);
+                createBasinList(array);
               </script>
             </ul>
           </div>
@@ -500,18 +308,6 @@
         Water Conservation Board</a>
     </h5>
   </footer>
-
-<!-- JAVASCRIPT FUNCTIONS -->
-<script>
-  function setActive(active, non_active)
-  {
-    document.getElementById(active).style.display = 'inline';
-    for(var index = 0; index < non_active.length; index++)
-    {
-      document.getElementById(non_active[index]).style.display = 'none';
-    }
-  }
-</script>
 
 </body>
 </html>
