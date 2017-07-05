@@ -87,17 +87,26 @@
           </div>
         </div>
         <div class="well">
-          <p>Website version 1.0.1 (2017-06-29)</p>
+          <p>Website version 1.0.2 (2017-07-05)</p>
         </div>
       </div>
       <div class="col-sm-8 text-lefto" id="mapid">
-        <div id="mapid" style="width: 100px; height: 800px;">
+        <div style="width: 100vh; height: 86vh;">
           <script>
             $.ajaxSetup({
               async: false
             });
             /* Create Leaflet Map */
-            var map = L.map('mapid', {zoomControl: false}).setView([38.99, -105.54], 7);
+            var map = L.map('mapid', {zoomControl: false});
+
+            if($(window).width() < 767)
+            {
+              map.setView([38.99, -105.54], 5);
+            }
+            else
+            {
+              map.setView([38.99, -105.54], 7);
+            }
                   
             L.tileLayer('https://api.mapbox.com/styles/v1/mapbox/outdoors-v10/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1Ijoia29yeXNhbSIsImEiOiJjaXd4dDRxbTQwMXRkMm9tZzd5b3BqdTBwIn0.A2EGyNrWG2Lbbd5c-I-94w', {
                 attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery &copy;<a href="http://mapbox.com">Mapbox</a>',
@@ -279,8 +288,7 @@
       <div class="col-sm-2 sidenav">
         <div class="well">
           <div class="dropdown">
-            <button class="btn btn-primary dropdown-toggle" type="button"
-              data-toggle="dropdown">
+            <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">
               Select Basin<span class="caret"></span>
             </button>
             <ul class="dropdown-menu" id="basinlist">

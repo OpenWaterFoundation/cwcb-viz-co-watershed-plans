@@ -99,7 +99,7 @@ function createBasinList(basin_array)
 	  var list = document.createElement('li');
 	  var a = document.createElement('a');
 	  a.setAttribute("href","#");
-	  a.setAttribute("onclick",'clickOnMapItem(' + '"' + basin_array[HUC8][1] + '");');
+	  a.setAttribute("onclick",'clickOnMapItem(' + '"' + basin_array[HUC8][1] + '"); return false;');
 	  var basin = document.createTextNode(basin_array[HUC8][0] + " " + basin_array[HUC8][1]);
 	  a.appendChild(basin);
 	  list.appendChild(a);
